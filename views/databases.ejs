@@ -25,6 +25,9 @@
                     <li class="nav-item">
                         <a class="nav-link active" href="/databases"><i class="bi bi-database"></i> Databases</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/health"><i class="bi bi-heart-pulse"></i> Health</a>
+                    </li>
                 </ul>
             </div>
         </div>
@@ -184,13 +187,10 @@
         <% } %>
     </div>
 
-    <footer class="footer mt-auto py-3 bg-light">
-        <div class="container text-center">
-            <span class="text-muted">PGNow - PostgreSQL Monitoring Tool</span>
-        </div>
-    </footer>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <%- include('partials/footer') %>
+    
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -202,6 +202,33 @@
                 const dbNames = [<% databases.forEach((db, index) => { %>'<%= db.name %>'<%= index < databases.length - 1 ? ',' : '' %><% }) %>];
                 const dbSizes = [<% databases.forEach((db, index) => { %>'<%= db.size %>'<%= index < databases.length - 1 ? ',' : '' %><% }) %>];
                 
+                // Function to convert size string to bytes
+                function convertToBytes(sizeStr) {
+                    const units = {
+                        'bytes': 1,
+                        'kb': 1024,
+                        'mb': 1024 * 1024,
+                        'gb': 1024 * 1024 * 1024,
+                        'tb': 1024 * 1024 * 1024 * 1024
+                    };
+                    
+                    const matches = sizeStr.toLowerCase().match(/^([\d.]+)\s*([kmgt]?b)(?:ytes)?$/);
+                    if (!matches) return 0;
+                    
+                    const size = parseFloat(matches[1]);
+                    const unit = matches[2];
+                    
+                    return size * (units[unit] || 1);
+                }
+
+                // Function to format bytes to human readable size
+                function formatBytes(bytes) {
+                    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+                    if (bytes === 0) return '0 Bytes';
+                    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+                    return parseFloat((bytes / Math.pow(1024, i)).toFixed(2)) + ' ' + sizes[i];
+                }
+                
                 // Generate random colors
                 const backgroundColors = dbNames.map(() => {
                     const r = Math.floor(Math.random() * 200);
@@ -210,17 +237,16 @@
                     return `rgba(${r}, ${g}, ${b}, 0.7)`;
                 });
                 
+                // Convert sizes to bytes for proper comparison
+                const sizeInBytes = dbSizes.map(size => convertToBytes(size));
+                
                 // Create the chart
                 new Chart(dbSizeCtx, {
                     type: 'pie',
                     data: {
                         labels: dbNames,
                         datasets: [{
-                            data: dbSizes.map(size => {
-                                // Extract numeric value from size string (e.g. "123 MB" -> 123)
-                                const match = size.match(/(\d+(\.\d+)?)/);
-                                return match ? parseFloat(match[0]) : 0;
-                            }),
+                            data: sizeInBytes,
                             backgroundColor: backgroundColors,
                             borderWidth: 1
                         }]
@@ -234,7 +260,8 @@
                             tooltip: {
                                 callbacks: {
                                     label: function(context) {
-                                        return `${context.label}: ${dbSizes[context.dataIndex]}`;
+                                        const bytes = context.raw;
+                                        return `${context.label}: ${formatBytes(bytes)}`;
                                     }
                                 }
                             }
