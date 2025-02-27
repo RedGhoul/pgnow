@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PGNow - All Databases</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-database-check"></i> PGNow
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/"><i class="bi bi-speedometer2"></i> Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/databases"><i class="bi bi-database"></i> Databases</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <% if (typeof flash !== 'undefined' && flash.error && flash.error.length > 0) { %>
+            <div class="alert alert-danger">
+                <%= flash.error %>
+            </div>
+        <% } %>
+
+        <% if (typeof error !== 'undefined') { %>
+            <div class="alert alert-danger">
+                <h4>Error</h4>
+                <p><%= error %></p>
+                <p>Please check your database connection settings and ensure PostgreSQL is running.</p>
+            </div>
+        <% } else { %>
+            <div class="row mb-4">
+                <div class="col">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="card-title mb-0">
+                                <i class="bi bi-database-fill"></i> All PostgreSQL Databases
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Size</th>
+                                            <th>Owner</th>
+                                            <th>Encoding</th>
+                                            <th>Connections</th>
+                                            <th>Access</th>
+                                            <th>Activity</th>
+                                            <th>Cache Hit Ratio</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% databases.forEach(db => { 
+                                            const totalBlocks = parseInt(db.blocks_read) + parseInt(db.blocks_hit);
+                                            const cacheHitRatio = totalBlocks > 0 ? 
+                                                (parseInt(db.blocks_hit) / totalBlocks * 100).toFixed(2) : 
+                                                0;
+                                        %>
+                                            <tr class="<%= db.name === currentDb ? 'table-primary' : '' %>">
+                                                <td>
+                                                    <strong><%= db.name %></strong>
+                                                    <% if (db.name === currentDb) { %>
+                                                        <span class="badge bg-primary ms-2">Current</span>
+                                                    <% } %>
+                                                </td>
+                                                <td><%= db.size %></td>
+                                                <td><%= db.owner %></td>
+                                                <td><%= db.encoding %></td>
+                                                <td><%= db.connections || 0 %></td>
+                                                <td><span class="badge <%= db.has_access === 'Yes' ? 'bg-success' : 'bg-danger' %>"><%= db.has_access %></span></td>
+                                                <td>
+                                                    <div class="small">
+                                                        <div><i class="bi bi-arrow-down-circle text-success"></i> Fetched: <%= parseInt(db.rows_fetched).toLocaleString() || 0 %></div>
+                                                        <div><i class="bi bi-arrow-up-circle text-primary"></i> Returned: <%= parseInt(db.rows_returned).toLocaleString() || 0 %></div>
+                                                        <div><i class="bi bi-plus-circle text-info"></i> Inserted: <%= parseInt(db.rows_inserted).toLocaleString() || 0 %></div>
+                                                        <div><i class="bi bi-pencil-square text-warning"></i> Updated: <%= parseInt(db.rows_updated).toLocaleString() || 0 %></div>
+                                                        <div><i class="bi bi-trash text-danger"></i> Deleted: <%= parseInt(db.rows_deleted).toLocaleString() || 0 %></div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="progress">
+                                                        <div class="progress-bar <%= cacheHitRatio < 70 ? 'bg-danger' : (cacheHitRatio < 90 ? 'bg-warning' : 'bg-success') %>" 
+                                                            role="progressbar" 
+                                                            style="width: <%= cacheHitRatio %>%;" 
+                                                            aria-valuenow="<%= cacheHitRatio %>" 
+                                                            aria-valuemin="0" 
+                                                            aria-valuemax="100">
+                                                            <%= cacheHitRatio %>%
+                                                        </div>
+                                                    </div>
+                                                    <div class="small mt-1">
+                                                        <span>Reads: <%= parseInt(db.blocks_read).toLocaleString() || 0 %></span>
+                                                        <span class="ms-2">Hits: <%= parseInt(db.blocks_hit).toLocaleString() || 0 %></span>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        <% }) %>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="card-title mb-0"><i class="bi bi-bar-chart"></i> Transaction Statistics</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Database</th>
+                                            <th>Commits</th>
+                                            <th>Rollbacks</th>
+                                            <th>Commit Ratio</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% databases.forEach(db => { 
+                                            const totalTransactions = parseInt(db.commits) + parseInt(db.rollbacks);
+                                            const commitRatio = totalTransactions > 0 ? 
+                                                (parseInt(db.commits) / totalTransactions * 100).toFixed(2) : 
+                                                100;
+                                        %>
+                                            <tr>
+                                                <td><%= db.name %></td>
+                                                <td><%= parseInt(db.commits).toLocaleString() || 0 %></td>
+                                                <td><%= parseInt(db.rollbacks).toLocaleString() || 0 %></td>
+                                                <td>
+                                                    <div class="progress">
+                                                        <div class="progress-bar bg-success" 
+                                                            role="progressbar" 
+                                                            style="width: <%= commitRatio %>%;" 
+                                                            aria-valuenow="<%= commitRatio %>" 
+                                                            aria-valuemin="0" 
+                                                            aria-valuemax="100">
+                                                            <%= commitRatio %>%
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        <% }) %>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="card-title mb-0"><i class="bi bi-pie-chart"></i> Database Size Distribution</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="dbSizeChart" height="250"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <% } %>
+    </div>
+
+    <footer class="footer mt-auto py-3 bg-light">
+        <div class="container text-center">
+            <span class="text-muted">PGNow - PostgreSQL Monitoring Tool</span>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            <% if (typeof error === 'undefined' && databases && databases.length > 0) { %>
+                // Create database size chart
+                const dbSizeCtx = document.getElementById('dbSizeChart').getContext('2d');
+                
+                // Extract data for chart
+                const dbNames = [<% databases.forEach((db, index) => { %>'<%= db.name %>'<%= index < databases.length - 1 ? ',' : '' %><% }) %>];
+                const dbSizes = [<% databases.forEach((db, index) => { %>'<%= db.size %>'<%= index < databases.length - 1 ? ',' : '' %><% }) %>];
+                
+                // Generate random colors
+                const backgroundColors = dbNames.map(() => {
+                    const r = Math.floor(Math.random() * 200);
+                    const g = Math.floor(Math.random() * 200);
+                    const b = Math.floor(Math.random() * 200);
+                    return `rgba(${r}, ${g}, ${b}, 0.7)`;
+                });
+                
+                // Create the chart
+                new Chart(dbSizeCtx, {
+                    type: 'pie',
+                    data: {
+                        labels: dbNames,
+                        datasets: [{
+                            data: dbSizes.map(size => {
+                                // Extract numeric value from size string (e.g. "123 MB" -> 123)
+                                const match = size.match(/(\d+(\.\d+)?)/);
+                                return match ? parseFloat(match[0]) : 0;
+                            }),
+                            backgroundColor: backgroundColors,
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return `${context.label}: ${dbSizes[context.dataIndex]}`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            <% } %>
+        });
+    </script>
+</body>
+</html> 

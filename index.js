@@ -126,6 +126,50 @@ app.get('/', async (req, res) => {
   }
 });
 
+// New route to display all databases
+app.get('/databases', async (req, res) => {
+  try {
+    // Get list of all databases
+    const dbListResult = await pool.query(`
+      SELECT 
+        d.datname as name,
+        pg_size_pretty(pg_database_size(d.datname)) as size,
+        u.usename as owner,
+        pg_encoding_to_char(d.encoding) as encoding,
+        d.datcollate as collation,
+        d.datctype as ctype,
+        CASE WHEN pg_catalog.has_database_privilege(d.datname, 'CONNECT')
+             THEN 'Yes' ELSE 'No' END as has_access,
+        s.numbackends as connections,
+        s.xact_commit as commits,
+        s.xact_rollback as rollbacks,
+        s.blks_read as blocks_read,
+        s.blks_hit as blocks_hit,
+        s.tup_returned as rows_returned,
+        s.tup_fetched as rows_fetched,
+        s.tup_inserted as rows_inserted,
+        s.tup_updated as rows_updated,
+        s.tup_deleted as rows_deleted
+      FROM pg_catalog.pg_database d
+      JOIN pg_catalog.pg_user u ON d.datdba = u.usesysid
+      LEFT JOIN pg_stat_database s ON d.datname = s.datname
+      WHERE d.datistemplate = false
+      ORDER BY pg_database_size(d.datname) DESC
+    `);
+
+    // Render the databases view with the data
+    res.render('databases', {
+      databases: dbListResult.rows,
+      currentDb: process.env.DB_NAME,
+      flash: req.flash()
+    });
+  } catch (error) {
+    console.error('Error fetching databases list:', error);
+    req.flash('error', 'Failed to fetch databases list');
+    res.render('databases', { error: error.message, flash: req.flash() });
+  }
+});
+
 // API endpoints for AJAX updates
 app.get('/api/status', async (req, res) => {
   try {

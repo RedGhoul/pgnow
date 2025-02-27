@@ -15,6 +15,19 @@
             <a class="navbar-brand" href="/">
                 <i class="bi bi-database-check"></i> PGNow
             </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/"><i class="bi bi-speedometer2"></i> Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/databases"><i class="bi bi-database"></i> Databases</a>
+                    </li>
+                </ul>
+            </div>
             <div class="d-flex align-items-center">
                 <div id="status-indicator" class="status-indicator <%= typeof error !== 'undefined' ? 'status-down' : 'status-up' %>"></div>
                 <span id="status-text" class="text-light ms-2"><%= typeof error !== 'undefined' ? 'Database Down' : 'Database Up' %></span>
@@ -47,6 +60,7 @@
                             <p><strong>Version:</strong> <%= dbStatus.version.split(',')[0] %></p>
                             <p><strong>Uptime:</strong> <%= dbStatus.uptime %></p>
                             <p><strong>Status:</strong> <span class="badge bg-success">Running</span></p>
+                            <a href="/databases" class="btn btn-sm btn-outline-primary mt-2">View All Databases</a>
                         </div>
                     </div>
                 </div>
