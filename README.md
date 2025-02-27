@@ -6,13 +6,48 @@ PGNow is a comprehensive, real-time PostgreSQL database monitoring tool that pro
 
 ## Features
 
-- **Database Status**: View PostgreSQL version, uptime, and current status
-- **Connections**: Monitor active, idle, and total connections with usage trends
-- **Performance**: Track queries per second, transaction metrics, and cache hit ratio
-- **Storage**: View database size and largest tables
-- **Slow Queries**: Identify and analyze the slowest queries
-- **Index Usage**: Monitor index usage statistics and identify optimization opportunities
-- **Real-time Updates**: Automatic refresh of metrics for up-to-date monitoring
+### Core Monitoring
+- **Database Status**: Real-time monitoring of database status, uptime tracking, and PostgreSQL version information
+- **Connection Management**: 
+  - Active and idle connection monitoring
+  - Maximum connection limit tracking
+  - Visual connection usage trends
+  - Connection utilization alerts
+
+### Performance Metrics
+- **Query Performance**:
+  - Queries per second tracking
+  - Average query execution time
+  - Query success rate monitoring
+- **Cache Performance**:
+  - Buffer cache hit ratio
+  - Block read/write statistics
+  - Cache efficiency metrics
+
+### Storage & Resources
+- **Database Size Analytics**:
+  - Total database size monitoring
+  - Top 5 largest tables tracking
+  - Per-database size distribution
+- **Resource Monitoring**:
+  - Basic connection utilization metrics
+  - Transaction success rates
+  - Block read/write operations
+
+### Transaction & Lock Management
+- **Transaction Metrics**:
+  - Transaction rate monitoring
+  - Commit/rollback statistics
+  - Active lock tracking
+- **Index Management**:
+  - Index usage statistics
+  - Unused index detection
+  - Index optimization suggestions
+
+### Real-time Updates
+- Automatic metric refresh every 5-30 seconds
+- Live status monitoring
+- Dynamic performance graphs
 
 ## Prerequisites
 
@@ -56,23 +91,6 @@ PGNow is a comprehensive, real-time PostgreSQL database monitoring tool that pro
    http://localhost:3000
    ```
 
-## Enabling Slow Query Monitoring
-
-To enable the slow query monitoring feature, you need to enable the `pg_stat_statements` extension in PostgreSQL:
-
-1. Add the following to your `postgresql.conf` file:
-   ```
-   shared_preload_libraries = 'pg_stat_statements'
-   pg_stat_statements.track = all
-   ```
-
-2. Restart PostgreSQL
-
-3. Connect to your database and run:
-   ```sql
-   CREATE EXTENSION IF NOT EXISTS pg_stat_statements;
-   ```
-
 ## Development
 
 To run the application in development mode with automatic restarts:
@@ -80,6 +98,15 @@ To run the application in development mode with automatic restarts:
 ```
 npm run dev
 ```
+
+## Known Limitations
+
+- CPU and memory usage monitoring is limited to connection-based metrics
+- Network I/O monitoring is not currently implemented
+- Detailed storage growth trends are not tracked historically
+- Alert system and customizable thresholds are not implemented
+- Slow query analysis requires manual configuration
+- Deadlock detection is not implemented
 
 ## License
 
