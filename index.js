@@ -5,18 +5,43 @@ const path = require('path');
 const moment = require('moment');
 const session = require('express-session');
 const flash = require('connect-flash');
+const helmet = require('helmet');
 
 // Initialize Express app
 const app = express();
 const port = process.env.PORT || 3000;
 
-// PostgreSQL connection pool
+// Security headers
+app.use(helmet());
+
+// Rate limiting
+const rateLimit = require('express-rate-limit');
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100 // limit each IP to 100 requests per windowMs
+});
+app.use(limiter);
+
+// PostgreSQL connection pool with production settings
 const pool = new Pool({
   host: process.env.DB_HOST,
   port: process.env.DB_PORT,
   database: process.env.DB_NAME,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  max: 20, // Maximum number of clients in the pool
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
+});
+
+// Graceful shutdown handling
+process.on('SIGTERM', () => {
+  console.log('SIGTERM signal received: closing HTTP server');
+  pool.end(() => {
+    console.log('Database pool has ended');
+    process.exit(0);
+  });
 });
 
 // Test database connection
@@ -33,19 +58,52 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
 // Middleware
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'), {
+  maxAge: '1d',
+  etag: true
+}));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+
+// Session configuration with secure settings
 app.use(session({
-  secret: process.env.SESSION_SECRET,
+  secret: process.env.SESSION_SECRET || 'your-secret-key',
   resave: false,
-  saveUninitialized: true,
-  cookie: { maxAge: 60 * 60 * 1000 } // 1 hour
+  saveUninitialized: false,
+  cookie: { 
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    maxAge: 60 * 60 * 1000, // 1 hour
+    sameSite: 'strict'
+  }
 }));
 app.use(flash());
 
+// Health check endpoint
+app.get('/health', async (req, res) => {
+  try {
+    await pool.query('SELECT 1');
+    res.status(200).json({ status: 'healthy', timestamp: new Date().toISOString() });
+  } catch (error) {
+    res.status(500).json({ status: 'unhealthy', error: error.message });
+  }
+});
+
 // Make moment available in all views
 app.locals.moment = moment;
+
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({
+    error: process.env.NODE_ENV === 'production' ? 'Internal Server Error' : err.message
+  });
+});
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({ error: 'Not Found' });
+});
 
 // Routes
 app.get('/', async (req, res) => {
