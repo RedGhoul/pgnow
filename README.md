@@ -2,7 +2,23 @@
 
 PGNow is a comprehensive, real-time PostgreSQL database monitoring tool that provides a centralized dashboard for tracking database health, performance, and resource usage.
 
-![PGNow Dashboard](https://via.placeholder.com/800x450.png?text=PGNow+Dashboard)
+## Dashboard Screenshots
+
+### Main Dashboard Overview
+![Main Dashboard](Screenshot%202025-02-27%20163115.png)
+*Core metrics showing database version, uptime, connections, and query performance trends*
+
+### System Health and Database Sizes
+![System Health](Screenshot%202025-02-27%20163139.png)
+*System health metrics including CPU usage, cache hit ratio, and database size distribution*
+
+### Transaction Statistics and Size Distribution
+![Transaction Stats](Screenshot%202025-02-27%20163155.png)
+*Detailed transaction statistics and visual database size distribution*
+
+### Database Health and Performance Metrics
+![Database Health](Screenshot%202025-02-27%20163210.png)
+*Comprehensive health overview including cache performance, locks, and query monitoring*
 
 ## Features
 
