@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PGNow - PostgreSQL Monitoring</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-database-check"></i> PGNow
+            </a>
+            <div class="d-flex align-items-center">
+                <div id="status-indicator" class="status-indicator <%= typeof error !== 'undefined' ? 'status-down' : 'status-up' %>"></div>
+                <span id="status-text" class="text-light ms-2"><%= typeof error !== 'undefined' ? 'Database Down' : 'Database Up' %></span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <% if (typeof flash !== 'undefined' && flash.error && flash.error.length > 0) { %>
+            <div class="alert alert-danger">
+                <%= flash.error %>
+            </div>
+        <% } %>
+
+        <% if (typeof error !== 'undefined') { %>
+            <div class="alert alert-danger">
+                <h4>Connection Error</h4>
+                <p><%= error %></p>
+                <p>Please check your database connection settings and ensure PostgreSQL is running.</p>
+            </div>
+        <% } else { %>
+            <div class="row">
+                <!-- Database Status Card -->
+                <div class="col-md-6 col-lg-3 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="card-title mb-0"><i class="bi bi-info-circle"></i> Database Status</h5>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Version:</strong> <%= dbStatus.version.split(',')[0] %></p>
+                            <p><strong>Uptime:</strong> <%= dbStatus.uptime %></p>
+                            <p><strong>Status:</strong> <span class="badge bg-success">Running</span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Connections Card -->
+                <div class="col-md-6 col-lg-3 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="card-title mb-0"><i class="bi bi-people"></i> Connections</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Active:</span>
+                                <strong><%= connectionInfo.active_connections %></strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Idle:</span>
+                                <strong><%= connectionInfo.idle_connections %></strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Total:</span>
+                                <strong><%= connectionInfo.total_connections %></strong>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span>Max Allowed:</span>
+                                <strong><%= maxConnections %></strong>
+                            </div>
+                            
+                            <div class="progress mt-3">
+                                <div class="progress-bar" role="progressbar" 
+                                    style="width: <%= (connectionInfo.total_connections / maxConnections * 100).toFixed(1) %>%;" 
+                                    aria-valuenow="<%= connectionInfo.total_connections %>" 
+                                    aria-valuemin="0" 
+                                    aria-valuemax="<%= maxConnections %>">
+                                    <%= (connectionInfo.total_connections / maxConnections * 100).toFixed(1) %>%
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Database Size Card -->
+                <div class="col-md-6 col-lg-3 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="card-title mb-0"><i class="bi bi-hdd"></i> Storage</h5>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Database Size:</strong> <%= dbSize %></p>
+                            
+                            <h6 class="mt-3">Largest Tables:</h6>
+                            <ul class="list-group">
+                                <% largestTables.forEach(table => { %>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <%= table.table_name %>
+                                        <span class="badge bg-primary rounded-pill"><%= table.size %></span>
+                                    </li>
+                                <% }) %>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Performance Card -->
+                <div class="col-md-6 col-lg-3 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="card-title mb-0"><i class="bi bi-speedometer"></i> Performance</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="performance-metrics">
+                                <p>Loading performance metrics...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Slow Queries Card -->
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-danger text-white">
+                            <h5 class="card-title mb-0"><i class="bi bi-hourglass-split"></i> Slow Queries</h5>
+                        </div>
+                        <div class="card-body">
+                            <% if (slowQueries && slowQueries.length > 0) { %>
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Query</th>
+                                                <th>Calls</th>
+                                                <th>Total Time (ms)</th>
+                                                <th>Mean Time (ms)</th>
+                                                <th>Rows</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <% slowQueries.forEach(query => { %>
+                                                <tr>
+                                                    <td><code><%= query.query.length > 100 ? query.query.substring(0, 100) + '...' : query.query %></code></td>
+                                                    <td><%= query.calls %></td>
+                                                    <td><%= query.total_time.toFixed(2) %></td>
+                                                    <td><%= query.mean_time.toFixed(2) %></td>
+                                                    <td><%= query.rows %></td>
+                                                </tr>
+                                            <% }) %>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            <% } else { %>
+                                <div class="alert alert-info">
+                                    <p>No slow query data available. The pg_stat_statements extension may not be enabled.</p>
+                                    <p>To enable it, add the following to your postgresql.conf:</p>
+                                    <pre>shared_preload_libraries = 'pg_stat_statements'
+pg_stat_statements.track = all</pre>
+                                    <p>Then restart PostgreSQL and run:</p>
+                                    <pre>CREATE EXTENSION IF NOT EXISTS pg_stat_statements;</pre>
+                                </div>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Index Usage Card -->
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-secondary text-white">
+                            <h5 class="card-title mb-0"><i class="bi bi-diagram-3"></i> Index Usage</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Table</th>
+                                            <th>Index Scans</th>
+                                            <th>Sequential Scans</th>
+                                            <th>Index Usage %</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% indexUsage.forEach(index => { %>
+                                            <tr>
+                                                <td><%= index.table_name %></td>
+                                                <td><%= index.index_scans %></td>
+                                                <td><%= index.sequential_scans %></td>
+                                                <td>
+                                                    <div class="progress">
+                                                        <div class="progress-bar <%= index.index_usage_percent < 50 ? 'bg-danger' : (index.index_usage_percent < 80 ? 'bg-warning' : 'bg-success') %>" 
+                                                            role="progressbar" 
+                                                            style="width: <%= index.index_usage_percent %>%;" 
+                                                            aria-valuenow="<%= index.index_usage_percent %>" 
+                                                            aria-valuemin="0" 
+                                                            aria-valuemax="100">
+                                                            <%= index.index_usage_percent.toFixed(1) %>%
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        <% }) %>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <% } %>
+    </div>
+
+    <footer class="footer mt-auto py-3 bg-light">
+        <div class="container text-center">
+            <span class="text-muted">PGNow - PostgreSQL Monitoring Tool</span>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/dashboard.js"></script>
+</body>
+</html> 
