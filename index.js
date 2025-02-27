@@ -502,6 +502,6 @@ app.get('/health', async (req, res) => {
 });
 
 // Start the server
-app.listen(port, () => {
-  console.log(`PostgreSQL Monitoring Tool running at http://localhost:${port}`);
+app.listen(port, '0.0.0.0', () => {
+  console.log(`PostgreSQL Monitoring Tool running at http://0.0.0.0:${port}`);
 });
