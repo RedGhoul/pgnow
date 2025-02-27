@@ -8,57 +8,35 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="stylesheet" href="/css/styles.css">
 </head>
-<body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="/">
-                <i class="bi bi-database-check"></i> PGNow
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/"><i class="bi bi-speedometer2"></i> Dashboard</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active" href="/databases"><i class="bi bi-database"></i> Databases</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/health"><i class="bi bi-heart-pulse"></i> Health</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+<body class="bg-light">
+    <%- include('partials/header') %>
 
-    <div class="container-fluid mt-4">
+    <div class="container pb-5">
         <% if (typeof flash !== 'undefined' && flash.error && flash.error.length > 0) { %>
-            <div class="alert alert-danger">
+            <div class="alert alert-danger rounded-4 border-0 shadow-sm">
                 <%= flash.error %>
             </div>
         <% } %>
 
         <% if (typeof error !== 'undefined') { %>
-            <div class="alert alert-danger">
-                <h4>Error</h4>
+            <div class="alert alert-danger rounded-4 border-0 shadow-sm">
+                <h4 class="alert-heading">Error</h4>
                 <p><%= error %></p>
-                <p>Please check your database connection settings and ensure PostgreSQL is running.</p>
+                <p class="mb-0">Please check your database connection settings and ensure PostgreSQL is running.</p>
             </div>
         <% } else { %>
             <div class="row mb-4">
                 <div class="col">
-                    <div class="card">
-                        <div class="card-header bg-primary text-white">
-                            <h5 class="card-title mb-0">
+                    <div class="card border-0 shadow-sm rounded-4">
+                        <div class="card-header bg-white border-0 py-3">
+                            <h5 class="card-title mb-0 text-primary">
                                 <i class="bi bi-database-fill"></i> All PostgreSQL Databases
                             </h5>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
-                                <table class="table table-striped table-hover">
-                                    <thead class="table-dark">
+                                <table class="table table-hover">
+                                    <thead class="table-light">
                                         <tr>
                                             <th>Name</th>
                                             <th>Size</th>
@@ -84,34 +62,55 @@
                                                         <span class="badge bg-primary ms-2">Current</span>
                                                     <% } %>
                                                 </td>
-                                                <td><%= db.size %></td>
-                                                <td><%= db.owner %></td>
+                                                <td><span class="badge bg-info text-white"><%= db.size %></span></td>
+                                                <td><span class="badge bg-secondary"><%= db.owner %></span></td>
                                                 <td><%= db.encoding %></td>
-                                                <td><%= db.connections || 0 %></td>
-                                                <td><span class="badge <%= db.has_access === 'Yes' ? 'bg-success' : 'bg-danger' %>"><%= db.has_access %></span></td>
+                                                <td><span class="badge bg-warning text-dark"><%= db.connections || 0 %></span></td>
+                                                <td>
+                                                    <span class="badge <%= db.has_access === 'Yes' ? 'bg-success' : 'bg-danger' %>">
+                                                        <%= db.has_access %>
+                                                    </span>
+                                                </td>
                                                 <td>
                                                     <div class="small">
-                                                        <div><i class="bi bi-arrow-down-circle text-success"></i> Fetched: <%= parseInt(db.rows_fetched).toLocaleString() || 0 %></div>
-                                                        <div><i class="bi bi-arrow-up-circle text-primary"></i> Returned: <%= parseInt(db.rows_returned).toLocaleString() || 0 %></div>
-                                                        <div><i class="bi bi-plus-circle text-info"></i> Inserted: <%= parseInt(db.rows_inserted).toLocaleString() || 0 %></div>
-                                                        <div><i class="bi bi-pencil-square text-warning"></i> Updated: <%= parseInt(db.rows_updated).toLocaleString() || 0 %></div>
-                                                        <div><i class="bi bi-trash text-danger"></i> Deleted: <%= parseInt(db.rows_deleted).toLocaleString() || 0 %></div>
+                                                        <div class="mb-1">
+                                                            <i class="bi bi-arrow-down-circle text-success"></i>
+                                                            <span class="ms-1">Fetched: <%= parseInt(db.rows_fetched).toLocaleString() || 0 %></span>
+                                                        </div>
+                                                        <div class="mb-1">
+                                                            <i class="bi bi-arrow-up-circle text-primary"></i>
+                                                            <span class="ms-1">Returned: <%= parseInt(db.rows_returned).toLocaleString() || 0 %></span>
+                                                        </div>
+                                                        <div class="mb-1">
+                                                            <i class="bi bi-plus-circle text-info"></i>
+                                                            <span class="ms-1">Inserted: <%= parseInt(db.rows_inserted).toLocaleString() || 0 %></span>
+                                                        </div>
+                                                        <div class="mb-1">
+                                                            <i class="bi bi-pencil-square text-warning"></i>
+                                                            <span class="ms-1">Updated: <%= parseInt(db.rows_updated).toLocaleString() || 0 %></span>
+                                                        </div>
+                                                        <div>
+                                                            <i class="bi bi-trash text-danger"></i>
+                                                            <span class="ms-1">Deleted: <%= parseInt(db.rows_deleted).toLocaleString() || 0 %></span>
+                                                        </div>
                                                     </div>
                                                 </td>
                                                 <td>
-                                                    <div class="progress">
+                                                    <div class="progress" style="height: 10px;">
                                                         <div class="progress-bar <%= cacheHitRatio < 70 ? 'bg-danger' : (cacheHitRatio < 90 ? 'bg-warning' : 'bg-success') %>" 
                                                             role="progressbar" 
                                                             style="width: <%= cacheHitRatio %>%;" 
                                                             aria-valuenow="<%= cacheHitRatio %>" 
                                                             aria-valuemin="0" 
                                                             aria-valuemax="100">
-                                                            <%= cacheHitRatio %>%
                                                         </div>
                                                     </div>
-                                                    <div class="small mt-1">
-                                                        <span>Reads: <%= parseInt(db.blocks_read).toLocaleString() || 0 %></span>
-                                                        <span class="ms-2">Hits: <%= parseInt(db.blocks_hit).toLocaleString() || 0 %></span>
+                                                    <div class="small mt-2">
+                                                        <strong><%= cacheHitRatio %>%</strong>
+                                                        <div class="text-muted mt-1">
+                                                            <small>Reads: <%= parseInt(db.blocks_read).toLocaleString() || 0 %></small>
+                                                            <small class="ms-2">Hits: <%= parseInt(db.blocks_hit).toLocaleString() || 0 %></small>
+                                                        </div>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -124,16 +123,18 @@
                 </div>
             </div>
 
-            <div class="row">
-                <div class="col-md-6 mb-4">
-                    <div class="card">
-                        <div class="card-header bg-success text-white">
-                            <h5 class="card-title mb-0"><i class="bi bi-bar-chart"></i> Transaction Statistics</h5>
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm rounded-4">
+                        <div class="card-header bg-white border-0 py-3">
+                            <h5 class="card-title mb-0 text-success">
+                                <i class="bi bi-bar-chart"></i> Transaction Statistics
+                            </h5>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
-                                <table class="table table-striped">
-                                    <thead>
+                                <table class="table table-hover">
+                                    <thead class="table-light">
                                         <tr>
                                             <th>Database</th>
                                             <th>Commits</th>
@@ -149,20 +150,20 @@
                                                 100;
                                         %>
                                             <tr>
-                                                <td><%= db.name %></td>
-                                                <td><%= parseInt(db.commits).toLocaleString() || 0 %></td>
-                                                <td><%= parseInt(db.rollbacks).toLocaleString() || 0 %></td>
+                                                <td><strong><%= db.name %></strong></td>
+                                                <td><span class="badge bg-success"><%= parseInt(db.commits).toLocaleString() || 0 %></span></td>
+                                                <td><span class="badge bg-danger"><%= parseInt(db.rollbacks).toLocaleString() || 0 %></span></td>
                                                 <td>
-                                                    <div class="progress">
+                                                    <div class="progress" style="height: 10px;">
                                                         <div class="progress-bar bg-success" 
                                                             role="progressbar" 
                                                             style="width: <%= commitRatio %>%;" 
                                                             aria-valuenow="<%= commitRatio %>" 
                                                             aria-valuemin="0" 
                                                             aria-valuemax="100">
-                                                            <%= commitRatio %>%
                                                         </div>
                                                     </div>
+                                                    <small class="mt-2 d-block"><strong><%= commitRatio %>%</strong></small>
                                                 </td>
                                             </tr>
                                         <% }) %>
@@ -173,10 +174,12 @@
                     </div>
                 </div>
 
-                <div class="col-md-6 mb-4">
-                    <div class="card">
-                        <div class="card-header bg-info text-white">
-                            <h5 class="card-title mb-0"><i class="bi bi-pie-chart"></i> Database Size Distribution</h5>
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm rounded-4">
+                        <div class="card-header bg-white border-0 py-3">
+                            <h5 class="card-title mb-0 text-info">
+                                <i class="bi bi-pie-chart"></i> Database Size Distribution
+                            </h5>
                         </div>
                         <div class="card-body">
                             <canvas id="dbSizeChart" height="250"></canvas>
@@ -194,82 +197,147 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            <% if (typeof error === 'undefined' && databases && databases.length > 0) { %>
-                // Create database size chart
-                const dbSizeCtx = document.getElementById('dbSizeChart').getContext('2d');
-                
-                // Extract data for chart
-                const dbNames = [<% databases.forEach((db, index) => { %>'<%= db.name %>'<%= index < databases.length - 1 ? ',' : '' %><% }) %>];
-                const dbSizes = [<% databases.forEach((db, index) => { %>'<%= db.size %>'<%= index < databases.length - 1 ? ',' : '' %><% }) %>];
-                
-                // Function to convert size string to bytes
-                function convertToBytes(sizeStr) {
-                    const units = {
-                        'bytes': 1,
-                        'kb': 1024,
-                        'mb': 1024 * 1024,
-                        'gb': 1024 * 1024 * 1024,
-                        'tb': 1024 * 1024 * 1024 * 1024
-                    };
-                    
-                    const matches = sizeStr.toLowerCase().match(/^([\d.]+)\s*([kmgt]?b)(?:ytes)?$/);
-                    if (!matches) return 0;
-                    
-                    const size = parseFloat(matches[1]);
-                    const unit = matches[2];
-                    
-                    return size * (units[unit] || 1);
+            try {
+                const canvas = document.getElementById('dbSizeChart');
+                if (!canvas) {
+                    console.error('Chart canvas not found');
+                    return;
                 }
 
-                // Function to format bytes to human readable size
-                function formatBytes(bytes) {
-                    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-                    if (bytes === 0) return '0 Bytes';
-                    const i = Math.floor(Math.log(bytes) / Math.log(1024));
-                    return parseFloat((bytes / Math.pow(1024, i)).toFixed(2)) + ' ' + sizes[i];
-                }
-                
-                // Generate random colors
-                const backgroundColors = dbNames.map(() => {
-                    const r = Math.floor(Math.random() * 200);
-                    const g = Math.floor(Math.random() * 200);
-                    const b = Math.floor(Math.random() * 200);
-                    return `rgba(${r}, ${g}, ${b}, 0.7)`;
-                });
-                
-                // Convert sizes to bytes for proper comparison
-                const sizeInBytes = dbSizes.map(size => convertToBytes(size));
-                
-                // Create the chart
-                new Chart(dbSizeCtx, {
-                    type: 'pie',
-                    data: {
-                        labels: dbNames,
-                        datasets: [{
-                            data: sizeInBytes,
-                            backgroundColor: backgroundColors,
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        plugins: {
-                            legend: {
-                                position: 'right',
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        const bytes = context.raw;
-                                        return `${context.label}: ${formatBytes(bytes)}`;
+                <% if (typeof databases !== 'undefined' && databases && databases.length > 0) { %>
+                    const ctx = canvas.getContext('2d');
+                    
+                    // Extract and validate data
+                    const dbData = [];
+                    <% databases.forEach(function(db) { %>
+                        dbData.push({
+                            name: '<%= db.name %>',
+                            size: '<%= db.size %>'
+                        });
+                    <% }); %>
+
+                    if (dbData.length === 0) {
+                        console.error('No database data available');
+                        return;
+                    }
+
+                    // Convert size strings to bytes
+                    function convertToBytes(sizeStr) {
+                        const units = {
+                            'bytes': 1,
+                            'kb': 1024,
+                            'mb': 1024 * 1024,
+                            'gb': 1024 * 1024 * 1024,
+                            'tb': 1024 * 1024 * 1024 * 1024
+                        };
+                        
+                        const matches = sizeStr.toLowerCase().match(/^([\d.]+)\s*([kmgt]?b)(?:ytes)?$/);
+                        if (!matches) return 0;
+                        
+                        const size = parseFloat(matches[1]);
+                        const unit = matches[2];
+                        
+                        return size * (units[unit] || 1);
+                    }
+
+                    function formatBytes(bytes) {
+                        const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+                        if (bytes === 0) return '0 Bytes';
+                        const i = Math.floor(Math.log(bytes) / Math.log(1024));
+                        return parseFloat((bytes / Math.pow(1024, i)).toFixed(2)) + ' ' + sizes[i];
+                    }
+
+                    // Process data
+                    const labels = dbData.map(db => db.name);
+                    const sizes = dbData.map(db => convertToBytes(db.size));
+                    const total = sizes.reduce((a, b) => a + b, 0);
+
+                    // Generate colors
+                    const colors = labels.map((_, i) => {
+                        const hue = (i * 137.5 + 15) % 360;  // Golden angle approximation
+                        return `hsla(${hue}, 70%, 70%, 0.8)`;
+                    });
+
+                    // Create chart
+                    new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                data: sizes,
+                                backgroundColor: colors,
+                                borderColor: 'white',
+                                borderWidth: 2
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'right',
+                                    labels: {
+                                        font: { size: 12 },
+                                        padding: 20,
+                                        usePointStyle: true
+                                    }
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            const value = context.raw;
+                                            const percentage = ((value / total) * 100).toFixed(1);
+                                            return `${context.label}: ${formatBytes(value)} (${percentage}%)`;
+                                        }
                                     }
                                 }
-                            }
+                            },
+                            cutout: '60%'
                         }
-                    }
-                });
-            <% } %>
+                    });
+                <% } else { %>
+                    console.log('No database data available for chart');
+                    canvas.style.display = 'none';
+                <% } %>
+            } catch (error) {
+                console.error('Error creating chart:', error);
+            }
         });
     </script>
+
+    <style>
+    .table th {
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        letter-spacing: 0.5px;
+    }
+
+    .badge {
+        font-weight: 500;
+    }
+
+    .progress {
+        border-radius: 0.5rem;
+        background-color: #e9ecef;
+    }
+
+    .card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+    }
+
+    .rounded-4 {
+        border-radius: 1rem !important;
+    }
+
+    .pb-5 {
+        padding-bottom: 6rem !important;
+    }
+    </style>
 </body>
 </html> 

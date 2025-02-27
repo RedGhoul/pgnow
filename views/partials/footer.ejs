@@ -1,7 +1,12 @@
 <!-- Footer -->
-<footer class="footer mt-auto py-3 bg-light">
+<footer class="footer py-4" style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);">
     <div class="container text-center">
-        <span class="text-muted">Made by <a href="https://avaneesa.com" target="_blank" class="text-decoration-none">avaneesa.com</a></span>
+        <span class="text-white opacity-75">PGNow - PostgreSQL Monitoring Tool</span>
+        <div class="mt-3">
+            <a href="https://avaneesa.com" target="_blank" class="text-white opacity-75 text-decoration-none small">
+                Made by avaneesa.com <i class="bi bi-box-arrow-up-right ms-1" style="font-size: 0.8em;"></i>
+            </a>
+        </div>
     </div>
 </footer>
 
@@ -10,6 +15,25 @@
     position: fixed;
     bottom: 0;
     width: 100%;
-    border-top: 1px solid #dee2e6;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+    z-index: 1000;
+}
+
+.footer a {
+    transition: all 0.3s ease;
+}
+
+.footer a:hover {
+    opacity: 1 !important;
+    transform: translateY(-1px);
+}
+
+.footer .bi {
+    transition: transform 0.3s ease;
+}
+
+.footer a:hover .bi {
+    transform: translate(2px, -2px);
 }
 </style> 

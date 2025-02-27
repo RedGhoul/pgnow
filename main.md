@@ -59,15 +59,6 @@ Locks Held: Number of active locks.
 
 Deadlocks: Number of detected deadlocks with involved queries.
 
-8. Replication (Optional)
-Replication Status: Indicates if replication is active (for setups with replication).
-
-Replication Lag: Time delay between primary and replica servers.
-
-Replica Health: Basic status of replica servers (if applicable).
-
-9. Error Logs
-Recent Errors: Displays the latest error messages from PostgreSQL logs with timestamps.
 
 10. Customization
 Configurable Dashboard: Allows users to select which metrics to display prominently.
@@ -77,8 +68,6 @@ Alert Thresholds: Options to set custom thresholds for alerts (e.g., high CPU us
 Technical Requirements
 User Interface
 Web-Based Dashboard: A clean, organized interface with sections or tabs for each feature category.
-
-Real-Time Updates: Metrics refresh periodically (e.g., every 10 seconds) or in real-time using technologies like WebSockets.
 
 Data Collection
 Source: Utilizes PostgreSQL’s built-in statistics views (e.g., pg_stat_activity, pg_stat_database) and system catalogs.
@@ -94,13 +83,5 @@ Future-Proof Design: Structured to allow easy addition of new metrics or feature
 Performance Considerations
 Low Overhead: Ensures the tool itself does not significantly impact database performance by using lightweight queries and configurable refresh intervals.
 
-Optional Integrations
-Multiple Databases: Capability to monitor multiple PostgreSQL instances from a single dashboard.
 
-Notifications: Integration with external services (e.g., email, Slack) for alerts.
-
-Deployment
-Standalone Application: Can be deployed independently or integrated into a larger monitoring ecosystem.
-
-Containerization: Supports deployment via Docker for ease of setup and scalability.
 

@@ -9,294 +9,414 @@
     <link rel="stylesheet" href="/css/styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="/">
-                <i class="bi bi-database-check"></i> PGNow
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <a class="nav-link active" href="/"><i class="bi bi-speedometer2"></i> Dashboard</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/databases"><i class="bi bi-database"></i> Databases</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/health"><i class="bi bi-heart-pulse"></i> Health</a>
-                    </li>
-                </ul>
+<body class="bg-light">
+    <%- include('partials/header') %>
+
+    <div class="container pb-5">
+        <h1 class="mb-4 fw-bold text-primary">Database Dashboard</h1>
+
+        <!-- Database Status -->
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-3">
+                <div class="card h-100 border-0 shadow-sm rounded-4 hover-card">
+                    <div class="card-body">
+                        <h5 class="card-title text-primary mb-3">
+                            <i class="bi bi-hdd-rack"></i> Version
+                        </h5>
+                        <p class="h5 mb-0 fw-bold text-break"><%= dbStatus.version.split(',')[0] %></p>
+                    </div>
+                </div>
             </div>
-            <div class="d-flex align-items-center">
-                <div id="status-indicator" class="status-indicator <%= typeof error !== 'undefined' ? 'status-down' : 'status-up' %>"></div>
-                <span id="status-text" class="text-light ms-2"><%= typeof error !== 'undefined' ? 'Database Down' : 'Database Up' %></span>
+            <div class="col-md-6 col-lg-3">
+                <div class="card h-100 border-0 shadow-sm rounded-4 hover-card">
+                    <div class="card-body">
+                        <h5 class="card-title text-success mb-3">
+                            <i class="bi bi-clock-history"></i> Uptime
+                        </h5>
+                        <p class="h3 mb-0 fw-bold"><%= dbStatus.uptime %></p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="card h-100 border-0 shadow-sm rounded-4 hover-card">
+                    <div class="card-body">
+                        <h5 class="card-title text-info mb-3">
+                            <i class="bi bi-people"></i> Connections
+                        </h5>
+                        <p class="h3 mb-0 fw-bold">
+                            <%= connectionInfo.active_connections %> / <%= maxConnections %>
+                        </p>
+                        <p class="text-muted small mb-0">Active / Max</p>
+                    </div>
+                </div>
             </div>
         </div>
-    </nav>
 
-    <div class="container-fluid mt-4">
-        <% if (typeof flash !== 'undefined' && flash.error && flash.error.length > 0) { %>
-            <div class="alert alert-danger">
-                <%= flash.error %>
-            </div>
-        <% } %>
-
-        <% if (typeof error !== 'undefined') { %>
-            <div class="alert alert-danger">
-                <h4>Connection Error</h4>
-                <p><%= error %></p>
-                <p>Please check your database connection settings and ensure PostgreSQL is running.</p>
-            </div>
-        <% } else { %>
-            <div class="row">
-                <!-- Database Status Card -->
-                <div class="col-md-6 col-lg-3 mb-4">
-                    <div class="card h-100">
-                        <div class="card-header bg-primary text-white">
-                            <h5 class="card-title mb-0"><i class="bi bi-info-circle"></i> Database Status</h5>
-                        </div>
-                        <div class="card-body">
-                            <p><strong>Version:</strong> <%= dbStatus.version.split(',')[0] %></p>
-                            <p><strong>Uptime:</strong> <%= dbStatus.uptime %></p>
-                            <p><strong>Status:</strong> <span class="badge bg-success">Running</span></p>
-                            <a href="/databases" class="btn btn-sm btn-outline-primary mt-2">View All Databases</a>
-                        </div>
+        <!-- Performance Insights -->
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="card border-0 shadow-sm rounded-4">
+                    <div class="card-header bg-white border-0 py-2">
+                        <h5 class="mb-0 text-primary">
+                            <i class="bi bi-speedometer2"></i> Query Performance
+                        </h5>
                     </div>
-                </div>
-
-                <!-- Connections Card -->
-                <div class="col-md-6 col-lg-3 mb-4">
-                    <div class="card h-100">
-                        <div class="card-header bg-info text-white">
-                            <h5 class="card-title mb-0"><i class="bi bi-people"></i> Connections</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between mb-2">
-                                <span>Active:</span>
-                                <strong><%= connectionInfo.active_connections %></strong>
-                            </div>
-                            <div class="d-flex justify-content-between mb-2">
-                                <span>Idle:</span>
-                                <strong><%= connectionInfo.idle_connections %></strong>
-                            </div>
-                            <div class="d-flex justify-content-between mb-2">
-                                <span>Total:</span>
-                                <strong><%= connectionInfo.total_connections %></strong>
-                            </div>
-                            <div class="d-flex justify-content-between">
-                                <span>Max Allowed:</span>
-                                <strong><%= maxConnections %></strong>
-                            </div>
-                            
-                            <div class="progress mt-3">
-                                <div class="progress-bar" role="progressbar" 
-                                    style="width: <%= (connectionInfo.total_connections / maxConnections * 100).toFixed(1) %>%;" 
-                                    aria-valuenow="<%= connectionInfo.total_connections %>" 
-                                    aria-valuemin="0" 
-                                    aria-valuemax="<%= maxConnections %>">
-                                    <%= (connectionInfo.total_connections / maxConnections * 100).toFixed(1) %>%
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Database Size Card -->
-                <div class="col-md-6 col-lg-3 mb-4">
-                    <div class="card h-100">
-                        <div class="card-header bg-success text-white">
-                            <h5 class="card-title mb-0"><i class="bi bi-hdd"></i> Storage</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="mb-3">
-                                <h6 class="text-muted">Total Database Size</h6>
-                                <h3 class="mb-3"><%= storageInfo.database_size %></h3>
-                                <div class="mb-3">
-                                    <div class="d-flex justify-content-between align-items-center mb-1">
-                                        <span class="text-muted">Tables Size:</span>
-                                        <strong><%= storageInfo.tables_size %></strong>
-                                    </div>
-                                    <div class="progress" style="height: 8px;">
-                                        <div class="progress-bar bg-primary" role="progressbar" style="width: 60%"></div>
-                                    </div>
-                                </div>
-                                <div class="mb-3">
-                                    <div class="d-flex justify-content-between align-items-center mb-1">
-                                        <span class="text-muted">Indexes Size:</span>
-                                        <strong><%= storageInfo.indexes_size %></strong>
-                                    </div>
-                                    <div class="progress" style="height: 8px;">
-                                        <div class="progress-bar bg-info" role="progressbar" style="width: 40%"></div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <h6 class="border-bottom pb-2">Largest Tables</h6>
-                            <div class="table-responsive">
-                                <table class="table table-sm table-hover">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>Table</th>
-                                            <th>Total</th>
-                                            <th>Data</th>
-                                            <th>Index</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="small">
-                                        <% largestTables.forEach(table => { %>
-                                            <tr>
-                                                <td><%= table.table_name %></td>
-                                                <td><%= table.total_size %></td>
-                                                <td><%= table.table_size %></td>
-                                                <td><%= table.index_size %></td>
-                                            </tr>
-                                        <% }) %>
-                                        <% if (largestTables.length === 0) { %>
-                                            <tr>
-                                                <td colspan="4" class="text-center text-muted">No table data available</td>
-                                            </tr>
-                                        <% } %>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Performance Card -->
-                <div class="col-md-6 col-lg-3 mb-4">
-                    <div class="card h-100">
-                        <div class="card-header bg-warning text-dark">
-                            <h5 class="card-title mb-0"><i class="bi bi-speedometer"></i> Performance</h5>
-                        </div>
-                        <div class="card-body">
-                            <div id="performance-metrics">
-                                <p>Loading performance metrics...</p>
-                            </div>
-                        </div>
+                    <div class="card-body py-2">
+                        <canvas id="queryChart" height="100"></canvas>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <div class="row">
-                <!-- Query Statistics Card -->
-                <div class="col-md-6 mb-4">
-                    <div class="card h-100">
-                        <div class="card-header bg-success text-white">
-                            <h5 class="card-title mb-0"><i class="bi bi-graph-up"></i> Query Statistics</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <h6 class="text-muted">Total Queries</h6>
-                                        <h3><%= parseInt(queryStats.total_queries).toLocaleString() %></h3>
-                                        <div class="progress mt-2">
+        <!-- System Health -->
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="card border-0 shadow-sm rounded-4">
+                    <div class="card-header bg-white border-0 py-3">
+                        <h5 class="mb-0 text-info">
+                            <i class="bi bi-heart-pulse"></i> System Health Metrics
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-4">
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0">
+                                        <div class="p-3 bg-info bg-opacity-10 rounded-4">
+                                            <i class="bi bi-cpu text-info" style="font-size: 1.5rem;"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <h6 class="text-muted mb-1">CPU Usage</h6>
+                                            <span class="small text-info"><%= systemHealth.connection_ratio %>%</span>
+                                        </div>
+                                        <div class="progress" style="height: 6px;">
+                                            <div class="progress-bar bg-info" role="progressbar" 
+                                                style="width: <%= systemHealth.connection_ratio %>%" 
+                                                aria-valuenow="<%= systemHealth.connection_ratio %>" 
+                                                aria-valuemin="0" 
+                                                aria-valuemax="100">
+                                            </div>
+                                        </div>
+                                        <p class="text-muted small mt-1 mb-0">Connection utilization</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0">
+                                        <div class="p-3 bg-success bg-opacity-10 rounded-4">
+                                            <i class="bi bi-memory text-success" style="font-size: 1.5rem;"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <h6 class="text-muted mb-1">Cache Hit Ratio</h6>
+                                            <span class="small text-success"><%= systemHealth.cache_hit_ratio %>%</span>
+                                        </div>
+                                        <div class="progress" style="height: 6px;">
                                             <div class="progress-bar bg-success" role="progressbar" 
-                                                style="width: <%= queryStats.success_rate %>%">
-                                                <%= queryStats.success_rate %>% Success Rate
+                                                style="width: <%= systemHealth.cache_hit_ratio %>%" 
+                                                aria-valuenow="<%= systemHealth.cache_hit_ratio %>" 
+                                                aria-valuemin="0" 
+                                                aria-valuemax="100">
                                             </div>
                                         </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <h6 class="text-muted">Row Operations</h6>
-                                        <div class="small">
-                                            <div class="d-flex justify-content-between mb-1">
-                                                <span><i class="bi bi-arrow-down text-success"></i> Fetched</span>
-                                                <strong><%= parseInt(queryStats.rows_fetched).toLocaleString() %></strong>
-                                            </div>
-                                            <div class="d-flex justify-content-between mb-1">
-                                                <span><i class="bi bi-arrow-up text-info"></i> Returned</span>
-                                                <strong><%= parseInt(queryStats.rows_returned).toLocaleString() %></strong>
-                                            </div>
-                                            <div class="d-flex justify-content-between mb-1">
-                                                <span><i class="bi bi-plus-circle text-primary"></i> Inserted</span>
-                                                <strong><%= parseInt(queryStats.rows_inserted).toLocaleString() %></strong>
-                                            </div>
-                                            <div class="d-flex justify-content-between mb-1">
-                                                <span><i class="bi bi-pencil text-warning"></i> Updated</span>
-                                                <strong><%= parseInt(queryStats.rows_updated).toLocaleString() %></strong>
-                                            </div>
-                                            <div class="d-flex justify-content-between">
-                                                <span><i class="bi bi-trash text-danger"></i> Deleted</span>
-                                                <strong><%= parseInt(queryStats.rows_deleted).toLocaleString() %></strong>
-                                            </div>
-                                        </div>
+                                        <p class="text-muted small mt-1 mb-0">Buffer cache efficiency</p>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Database Activity Card -->
-                <div class="col-md-6 mb-4">
-                    <div class="card h-100">
-                        <div class="card-header bg-info text-white">
-                            <h5 class="card-title mb-0"><i class="bi bi-activity"></i> Current Activity</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="row mb-4">
-                                <div class="col-6">
-                                    <div class="text-center">
-                                        <h6 class="text-muted">Active Queries</h6>
-                                        <h3 class="text-success"><%= dbActivity[0]?.active_queries || 0 %></h3>
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0">
+                                        <div class="p-3 bg-warning bg-opacity-10 rounded-4">
+                                            <i class="bi bi-hdd text-warning" style="font-size: 1.5rem;"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <h6 class="text-muted mb-1">Transaction Success</h6>
+                                            <span class="small text-warning"><%= systemHealth.commit_ratio %>%</span>
+                                        </div>
+                                        <div class="progress" style="height: 6px;">
+                                            <div class="progress-bar bg-warning" role="progressbar" 
+                                                style="width: <%= systemHealth.commit_ratio %>%" 
+                                                aria-valuenow="<%= systemHealth.commit_ratio %>" 
+                                                aria-valuemin="0" 
+                                                aria-valuemax="100">
+                                            </div>
+                                        </div>
+                                        <p class="text-muted small mt-1 mb-0">Commit ratio</p>
                                     </div>
                                 </div>
-                                <div class="col-6">
-                                    <div class="text-center">
-                                        <h6 class="text-muted">Idle in Transaction</h6>
-                                        <h3 class="text-warning"><%= dbActivity[0]?.idle_in_transaction || 0 %></h3>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="table-responsive">
-                                <table class="table table-sm">
-                                    <thead>
-                                        <tr>
-                                            <th>State</th>
-                                            <th>Duration</th>
-                                            <th>Wait Event</th>
-                                            <th>Query</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <% dbActivity.forEach(activity => { %>
-                                            <tr>
-                                                <td>
-                                                    <span class="badge <%= activity.state === 'active' ? 'bg-success' : 
-                                                        (activity.state === 'idle in transaction' ? 'bg-warning' : 'bg-secondary') %>">
-                                                        <%= activity.state %>
-                                                    </span>
-                                                </td>
-                                                <td><%= Math.floor(activity.session_time / 60) %>m <%= activity.session_time % 60 %>s</td>
-                                                <td><%= activity.wait_event_type || 'None' %></td>
-                                                <td>
-                                                    <code class="small">
-                                                        <%= activity.query ? (activity.query.length > 50 ? activity.query.substring(0, 50) + '...' : activity.query) : 'N/A' %>
-                                                    </code>
-                                                </td>
-                                            </tr>
-                                        <% }) %>
-                                    </tbody>
-                                </table>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        <% } %>
-    </div>
+        </div>
 
+        <!-- Database Sizes -->
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="card border-0 shadow-sm rounded-4">
+                    <div class="card-header bg-white border-0 py-3">
+                        <h5 class="mb-0 text-warning"><i class="bi bi-database"></i> Database Sizes</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive" style="max-height: 300px;">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light sticky-top">
+                                    <tr>
+                                        <th class="px-4">Database</th>
+                                        <th>Size</th>
+                                        <th width="40%" class="pe-4">Distribution</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% databases.forEach(db => { %>
+                                    <tr>
+                                        <td class="px-4"><strong><%= db.name %></strong></td>
+                                        <td><span class="badge bg-warning text-dark"><%= db.size %></span></td>
+                                        <td class="pe-4">
+                                            <div class="progress" style="height: 4px">
+                                                <div class="progress-bar bg-warning" role="progressbar" 
+                                                    style="width: <%= (db.size_bytes / databases[0].size_bytes * 100).toFixed(1) %>%" 
+                                                    aria-valuenow="<%= (db.size_bytes / databases[0].size_bytes * 100).toFixed(1) %>" 
+                                                    aria-valuemin="0" 
+                                                    aria-valuemax="100">
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <% }); %>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Query Statistics -->
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="card border-0 shadow-sm rounded-4">
+                    <div class="card-header bg-white border-0 py-3">
+                        <h5 class="mb-0 text-primary"><i class="bi bi-graph-up"></i> Query Statistics</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-4">
+                            <div class="col-md-3">
+                                <div class="p-3 bg-light rounded-4">
+                                    <h6 class="text-muted mb-2">Total Queries</h6>
+                                    <p class="h4 mb-0 fw-bold"><%= queryStats.total_queries.toLocaleString() %></p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="p-3 bg-light rounded-4">
+                                    <h6 class="text-muted mb-2">Success Rate</h6>
+                                    <p class="h4 mb-0 fw-bold text-success"><%= queryStats.success_rate %>%</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="p-3 bg-light rounded-4">
+                                    <h6 class="text-muted mb-2">Rows Returned</h6>
+                                    <p class="h4 mb-0 fw-bold"><%= queryStats.rows_returned.toLocaleString() %></p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="p-3 bg-light rounded-4">
+                                    <h6 class="text-muted mb-2">Rows Modified</h6>
+                                    <p class="h4 mb-0 fw-bold">
+                                        <%= (parseInt(queryStats.rows_inserted) + 
+                                            parseInt(queryStats.rows_updated) + 
+                                            parseInt(queryStats.rows_deleted)).toLocaleString() %>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Database Activity -->
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="card border-0 shadow-sm rounded-4">
+                    <div class="card-header bg-white border-0 py-3">
+                        <h5 class="mb-0 text-danger"><i class="bi bi-activity"></i> Current Activity</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Query</th>
+                                        <th>State</th>
+                                        <th>Wait Event</th>
+                                        <th>Duration</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% dbActivity.forEach(activity => { %>
+                                    <tr>
+                                        <td><code class="bg-light px-2 py-1 rounded"><%= activity.query %></code></td>
+                                        <td><span class="badge bg-primary"><%= activity.state %></span></td>
+                                        <td><%= activity.wait_event_type || 'None' %></td>
+                                        <td><%= moment.duration(activity.session_time, 'seconds').humanize() %></td>
+                                    </tr>
+                                    <% }); %>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+       
     <%- include('partials/footer') %>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Auto-refresh the page every 30 seconds
+        setTimeout(() => {
+            window.location.reload();
+        }, 30000);
+
+        // Query Performance Chart
+        const queryCtx = document.getElementById('queryChart').getContext('2d');
+        const performanceData = <%- JSON.stringify(queryPerformance) %>;
+        
+        new Chart(queryCtx, {
+            type: 'line',
+            data: {
+                labels: performanceData.map(d => d.time_label),
+                datasets: [{
+                    label: 'Queries/sec',
+                    data: performanceData.map(d => d.queries_per_sec),
+                    borderColor: '#6366f1',
+                    tension: 0.4,
+                    fill: true,
+                    backgroundColor: 'rgba(99, 102, 241, 0.1)'
+                }, {
+                    label: 'Avg Response Time (sec)',
+                    data: performanceData.map(d => Number(d.avg_response_time).toFixed(2)),
+                    borderColor: '#10b981',
+                    tension: 0.4,
+                    fill: true,
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            boxWidth: 12,
+                            padding: 8,
+                            font: {
+                                size: 11
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                label += context.parsed.y.toFixed(2);
+                                return label;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value.toFixed(1);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+
+    <style>
+    .hover-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
     
-    <!-- Bootstrap Bundle with Popper -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    .hover-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+    }
+
+    .card {
+        overflow: hidden;
+    }
+
+    .bg-light {
+        background-color: #f8f9fa !important;
+    }
+
+    .table {
+        margin-bottom: 0;
+    }
+
+    .table th {
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        letter-spacing: 0.5px;
+    }
+
+    .badge {
+        font-weight: 500;
+    }
+
+    code {
+        font-size: 0.875em;
+    }
+
+    .rounded-4 {
+        border-radius: 1rem !important;
+    }
+
+    .pb-5 {
+        padding-bottom: 6rem !important;
+    }
+
+    .table-responsive::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+    .table-responsive::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+    .table-responsive::-webkit-scrollbar-thumb {
+        background: #ddd;
+        border-radius: 3px;
+    }
+    .table-responsive::-webkit-scrollbar-thumb:hover {
+        background: #ccc;
+    }
+    .sticky-top {
+        top: 0;
+        z-index: 1;
+        background: white;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    </style>
 </body>
 </html> 

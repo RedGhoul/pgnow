@@ -1,0 +1,74 @@
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="/">
+                <i class="bi bi-database-check"></i><span class="ms-2">PGNow</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-2">
+                    <li class="nav-item">
+                        <a class="nav-link rounded-pill px-3 mx-1 nav-pill" href="/"><i class="bi bi-speedometer2"></i><span class="ms-2">Dashboard</span></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link rounded-pill px-3 mx-1 nav-pill" href="/databases"><i class="bi bi-database"></i><span class="ms-2">Databases</span></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link rounded-pill px-3 mx-1 nav-pill" href="/health"><i class="bi bi-heart-pulse"></i><span class="ms-2">Health</span></a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <div class="container mt-4">
+        <% if (locals.flash && flash.error) { %>
+            <div class="alert alert-danger rounded-4 border-0 shadow-sm">
+                <%= flash.error %>
+            </div>
+        <% } %>
+        <% if (locals.flash && flash.success) { %>
+            <div class="alert alert-success rounded-4 border-0 shadow-sm">
+                <%= flash.success %>
+            </div>
+        <% } %>
+    </div>
+
+<style>
+.navbar {
+    box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+    padding: 1rem 0;
+}
+
+.nav-pill {
+    transition: all 0.3s ease;
+    color: rgba(255,255,255,0.8) !important;
+}
+
+.nav-pill:hover {
+    background: rgba(255,255,255,0.15);
+    transform: translateY(-1px);
+    color: white !important;
+}
+
+.navbar-brand {
+    font-size: 1.5rem;
+    letter-spacing: 0.5px;
+    color: white !important;
+}
+
+.alert {
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateY(-10px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+</style>
